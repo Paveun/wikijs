@@ -32,7 +32,6 @@ services:
     image: ghcr.io/requarks/wiki:2
     depends_on:
       - db
-      - certbot
     volumes:
       - ./wikijs-config.yml:/wiki/config.yml
       - certbot_etc:/etc/letsencrypt
