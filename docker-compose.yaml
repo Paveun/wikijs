@@ -1,0 +1,46 @@
+version: "3"
+services:
+
+  certbot:
+    image: certbot/dns-cloudflare
+    volumes:
+      - certbot_etc:/etc/letsencrypt
+      - ./cloudflare.ini:/root/cloudflare.ini
+    command: >-
+      certonly --dns-cloudflare
+      --dns-cloudflare-credentials /root/cloudflare.ini
+      --dns-cloudflare-propagation-seconds 15
+      --email email@example.com
+      --agree-tos --no-eff-email
+      --force-renewal
+      -d XXXXX.example.com
+      -d *.XXXXX.example.com
+
+  db:
+    image: postgres:11-alpine
+    environment:
+      POSTGRES_DB: wiki
+      POSTGRES_PASSWORD: wikijsrocks
+      POSTGRES_USER: wikijs
+    logging:
+      driver: "none"
+    restart: unless-stopped
+    volumes:
+      - ./db-data:/var/lib/postgresql/data
+
+  wiki:
+    image: ghcr.io/requarks/wiki:2
+    depends_on:
+      - db
+      - certbot
+    volumes:
+      - ./wikijs-config.yml:/wiki/config.yml
+      - certbot_etc:/etc/letsencrypt
+    restart: unless-stopped
+    ports:
+      - "8081:3000"
+      - "4443:3443"
+
+volumes:
+  db-data:
+  certbot_etc:
